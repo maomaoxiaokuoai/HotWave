@@ -1,5 +1,4 @@
 import type { HotItem, PlatformKey } from "./types";
-import { FALLBACK } from "./fallback";
 
 const TIMEOUT = 4500;
 const UA =
@@ -257,6 +256,108 @@ async function fetchTencent(): Promise<HotItem[]> {
   if (!items.length) throw new Error("tencent empty");
   return limitItems(items);
 }
+
+/** 快手官方 GraphQL 热榜查询（从快手 PC 端 JS 包中提取的真实查询） */
+const KUAISHOU_QUERY = `query hotRankQuery($page: String) {
+  visionHotRank(page: $page) {
+    result
+    pcursor
+    webPageArea
+    items { rank id name viewCount hotValue iconUrl poster tagType photoIds }
+  }
+}`;
+
+async function fetchKuaishou(): Promise<HotItem[]> {
+  // 方案一：快手官方 GraphQL 端点（与网页端完全相同的热榜数据源）
+  for (const endpoint of ["https://www.kuaishou.com/graphql", "https://m.gifshow.com/graphql"]) {
+    try {
+      const res = await fetchWithTimeout(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "user-agent": UA,
+          referer: "https://www.kuaishou.com/",
+          origin: "https://www.kuaishou.com",
+        },
+        body: JSON.stringify({
+          operationName: "hotRankQuery",
+          variables: { page: "hotSearch" },
+          query: KUAISHOU_QUERY,
+        }),
+      });
+      const json: AnyObj = await res.json();
+      const list: AnyObj[] = json?.data?.visionHotRank?.items ?? [];
+      if (!list.length) continue;
+      const items: HotItem[] = list
+        .map((it) => {
+          const name = String(it?.name ?? it?.id ?? "").trim();
+          return {
+            title: name,
+            hot: String(it?.hotValue ?? ""),
+            url: `https://www.kuaishou.com/search/video?searchKey=${prettyEnc(name)}`,
+          };
+        })
+        .filter((i) => i.title);
+      if (items.length) return limitItems(items);
+    } catch {
+      /* 尝试下一个端点 */
+    }
+  }
+  // 方案二：第三方热榜聚合源（官方端点不可达时的备用）
+  for (const src of [
+    "https://api.vvhan.com/api/hotlist/ksHotSearch",
+    "https://api-hot.imsyy.top/kuaishou?cache=true",
+  ]) {
+    try {
+      const json: AnyObj = await fetchJson(src);
+      const list: AnyObj[] = json?.data ?? [];
+      if (!list.length) continue;
+      const items: HotItem[] = list
+        .map((it) => {
+          const title = String(it?.title ?? "").trim();
+          return {
+            title,
+            hot: fmtHot(it?.hot ?? it?.heat),
+            url:
+              String(it?.url ?? it?.mobileUrl ?? "").startsWith("http")
+                ? String(it?.url ?? it?.mobileUrl)
+                : `https://www.kuaishou.com/search/video?searchKey=${prettyEnc(title)}`,
+          };
+        })
+        .filter((i) => i.title);
+      if (items.length) return limitItems(items);
+    } catch {
+      /* 尝试下一个源 */
+    }
+  }
+  throw new Error("kuaishou all sources failed");
+}
+
+/** Bing 热搜：官方搜索建议接口的空查询会返回当前热门搜索词 */
+async function fetchBingByMarket(market: string): Promise<HotItem[]> {
+  const json: AnyObj = await fetchJson(
+    `https://api.bing.com/osjson.aspx?query=&market=${market}`
+  );
+  // 返回结构：["", [...热词], [], [], {meta}]
+  const words: string[] = Array.isArray(json?.[1]) ? json[1] : [];
+  const isCn = market.startsWith("zh");
+  const base = isCn ? "https://cn.bing.com" : "https://www.bing.com";
+  const items: HotItem[] = words
+    .map((w) => {
+      const word = String(w).trim();
+      return {
+        title: word,
+        hot: "",
+        url: `${base}/search?q=${prettyEnc(word)}`,
+      };
+    })
+    .filter((i) => i.title);
+  if (!items.length) throw new Error(`bing ${market} empty`);
+  return limitItems(items);
+}
+
+const fetchBingCN = () => fetchBingByMarket("zh-CN");
+const fetchBingIntl = () => fetchBingByMarket("en-US");
 
 async function fetchNetease(): Promise<HotItem[]> {
   const raw = await fetchText(
@@ -516,16 +617,12 @@ async function fetchYouTube(): Promise<HotItem[]> {
 
 export interface FetchResult {
   items: HotItem[];
-  live: boolean;
+  status: "live" | "failed";
 }
 
 type Fetcher = () => Promise<HotItem[]>;
 
-/**
- * 实时抓取注册表。
- * 快手 / 国内Bing / 国际Bing 无公开热搜接口（官方均为 JS 动态加载），
- * 未注册时展示演示数据，点击跳转对应平台的搜索页。
- */
+/** 全部 16 个平台实时抓取（失败时如实标记 failed，不伪造数据） */
 const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
   baidu: fetchBaidu,
   weibo: fetchWeibo,
@@ -533,9 +630,12 @@ const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
   zhihu: fetchZhihu,
   douyin: fetchDouyin,
   toutiao: fetchToutiao,
+  kuaishou: fetchKuaishou,
   tencent: fetchTencent,
   netease: fetchNetease,
+  bingcn: fetchBingCN,
   google: fetchGoogleTrends,
+  bingintl: fetchBingIntl,
   reddit: fetchReddit,
   hackernews: fetchHackerNews,
   twitter: fetchTwitter,
@@ -545,13 +645,15 @@ const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
 export async function fetchPlatform(key: PlatformKey): Promise<FetchResult> {
   const fetcher = FETCHERS[key];
   if (!fetcher) {
-    return { items: FALLBACK[key] ?? [], live: false };
+    // 未配置抓取源：如实标记失败，绝不伪造演示数据
+    return { items: [], status: "failed" };
   }
   try {
     const items = await fetcher();
     if (!items.length) throw new Error(`${key} empty`);
-    return { items, live: true };
+    return { items, status: "live" };
   } catch {
-    return { items: FALLBACK[key] ?? [], live: false };
+    // 抓取失败如实展示，页面卡片会显示失败状态
+    return { items: [], status: "failed" };
   }
 }

@@ -19,7 +19,6 @@ import {
 } from "@/lib/themes";
 import type { AggregateResult } from "@/lib/hotsearch";
 import type { Region } from "@/lib/hotsearch/types";
-import { buildDemoResult } from "@/lib/hotsearch/demo";
 
 type RegionFilter = "all" | Region;
 
@@ -55,9 +54,8 @@ export default function HotHub() {
       const json = (await res.json()) as AggregateResult;
       setData(json);
     } catch {
-      // 接口失败时用内置演示数据兜底，页面始终有内容
-      setError("热搜接口加载失败，当前展示演示数据");
-      setData((prev) => prev ?? buildDemoResult());
+      // 接口失败如实提示，不注入任何伪造数据
+      setError("热搜接口加载失败，请点击刷新重试");
     } finally {
       clearTimeout(timer);
       setLoading(false);
@@ -167,7 +165,11 @@ export default function HotHub() {
   );
 
   const liveCount = useMemo(
-    () => data?.platforms.filter((p) => p.live).length ?? 0,
+    () => data?.platforms.filter((p) => p.status === "live").length ?? 0,
+    [data]
+  );
+  const failedCount = useMemo(
+    () => data?.platforms.filter((p) => p.status === "failed").length ?? 0,
     [data]
   );
   const totalCount = data?.platforms.length ?? 0;
@@ -338,8 +340,10 @@ export default function HotHub() {
                 · {liveCount} 个实时
               </span>
             )}
-            {liveCount < totalCount && (
-              <span className="ml-1">· {totalCount - liveCount} 个演示</span>
+            {failedCount > 0 && (
+              <span className="ml-1" style={{ color: "#ef4444" }}>
+                · {failedCount} 个抓取失败
+              </span>
             )}
           </span>
           {data && (
@@ -392,7 +396,7 @@ export default function HotHub() {
             Hacker News / X / YouTube 等公开接口
           </p>
           <p className="mt-1">
-            部分平台接口受网络环境影响，实时抓取失败时将展示演示数据 · 点击榜单条目可跳转源站
+            各平台数据均来自公开接口实时抓取 · 抓取失败将如实显示失败状态 · 点击榜单条目可跳转源站
           </p>
           <p className="mt-1 opacity-70">
             Made with ❤️ and weather effects · {clock.getFullYear()}

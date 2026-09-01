@@ -204,6 +204,12 @@ body {
   background: #f59e0b;
   animation: livepulse 2.2s infinite;
 }
+.fail-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #ef4444;
+}
 
 .link-row:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);

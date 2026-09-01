@@ -1,11 +1,10 @@
 import { getDb } from "@/db";
 import { hotCache } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { PLATFORMS, type PlatformData } from "./types";
+import { PLATFORMS, type HotItem, type PlatformData } from "./types";
 import { fetchPlatform } from "./fetchers";
-import { FALLBACK } from "./fallback";
 
-const CACHE_KEY = "hot:v7"; // v7: 新增头条/快手/腾讯/网易/国内Bing/国际Bing 6 个平台
+const CACHE_KEY = "hot:v9"; // v9: 快手官方 GraphQL 实时源 + 页脚文案更新
 const MEMORY_TTL = 60_000; // 内存缓存 60 秒
 const DB_TTL = 120_000; // 数据库缓存 120 秒
 
@@ -49,12 +48,12 @@ export async function aggregateHotSearches(force = false): Promise<AggregateResu
     }
   }
 
-  // 3. 实时抓取（各平台并行，单个失败自动降级为演示数据）
+  // 3. 实时抓取（各平台并行，失败平台如实标记 failed，不伪造数据）
   const results = await Promise.allSettled(
     PLATFORMS.map(async (p) => {
       const res = await fetchPlatform(p.key).catch(() => ({
-        items: FALLBACK[p.key] ?? [],
-        live: false,
+        items: [] as HotItem[],
+        status: "failed" as const,
       }));
       return { ...p, ...res, fetchedAt: now } satisfies PlatformData;
     })
@@ -63,12 +62,7 @@ export async function aggregateHotSearches(force = false): Promise<AggregateResu
   const platforms: PlatformData[] = results.map((r, i) => {
     const def = PLATFORMS[i];
     if (r.status === "fulfilled") return r.value;
-    return {
-      ...def,
-      items: FALLBACK[def.key] ?? [],
-      live: false,
-      fetchedAt: now,
-    };
+    return { ...def, items: [], status: "failed", fetchedAt: now };
   });
 
   const payload: AggregatePayload = { updatedAt: now, platforms };

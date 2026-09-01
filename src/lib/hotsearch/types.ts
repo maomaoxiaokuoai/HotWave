@@ -41,7 +41,8 @@ export interface PlatformDef {
 
 export interface PlatformData extends PlatformDef {
   items: HotItem[];
-  live: boolean;
+  /** 抓取状态：live=实时成功，failed=抓取失败（如实展示，不再用演示数据误导） */
+  status: "live" | "failed";
   fetchedAt: number;
 }
 
@@ -115,7 +116,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "netease",
     name: "网易新闻",
-    icon: "/icons/netease.svg",
+    icon: "/favicons/netease.ico",
     region: "domestic",
     home: "https://news.163.com/",
     color: "#e60000",

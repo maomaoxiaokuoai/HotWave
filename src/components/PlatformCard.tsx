@@ -16,6 +16,8 @@ export default function PlatformCard({
   data: PlatformData;
   index: number;
 }) {
+  const live = data.status === "live";
+
   return (
     <section
       className="card overflow-hidden"
@@ -43,7 +45,7 @@ export default function PlatformCard({
             height={22}
             className="h-[22px] w-[22px] object-contain"
             loading="lazy"
-            // 本地 favicon 万一加载失败，回退到本地品牌 SVG，保证断网也不缺图标
+            // 本地图标万一加载失败，回退到本地品牌 SVG，保证断网也不缺图标
             onError={(e) => {
               const img = e.currentTarget;
               if (img.dataset.fbk !== "1") {
@@ -61,7 +63,7 @@ export default function PlatformCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px]" style={{ color: "var(--muted)" }}>
-            {data.live ? "实时抓取" : "演示数据"} ·{" "}
+            {live ? "实时抓取" : "抓取失败"} ·{" "}
             {new Date(data.fetchedAt).toLocaleTimeString("zh-CN", {
               hour12: false,
             })}
@@ -75,8 +77,8 @@ export default function PlatformCard({
               color: "var(--chip-text)",
             }}
           >
-            <i className={data.live ? "live-dot" : "demo-dot"} />
-            {data.live ? "实时" : "演示"}
+            <i className={live ? "live-dot" : "fail-dot"} />
+            {live ? "实时" : "失败"}
           </span>
           <a
             href={data.home}
@@ -90,42 +92,54 @@ export default function PlatformCard({
         </div>
       </header>
 
-      {/* 榜单 */}
-      <ol className="p-2">
-        {data.items.map((item, i) => (
-          <li key={`${data.key}-${i}`}>
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="link-row group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
-            >
-              <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${rankClass(i + 1)}`}
+      {/* 榜单 / 失败提示 */}
+      {live ? (
+        <ol className="p-2">
+          {data.items.map((item, i) => (
+            <li key={`${data.key}-${i}`}>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="link-row group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
               >
-                {i + 1}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[13.5px] leading-snug group-hover:underline">
-                {item.title}
-              </span>
-              {item.hot ? (
                 <span
-                  className="chip shrink-0 px-2 py-0.5 text-[11px] font-medium"
-                  title="热度"
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${rankClass(i + 1)}`}
                 >
-                  {item.hot}
+                  {i + 1}
                 </span>
-              ) : null}
-              <span
-                className="shrink-0 text-xs opacity-0 transition-opacity group-hover:opacity-60"
-                style={{ color: "var(--muted)" }}
-              >
-                ↗
-              </span>
-            </a>
-          </li>
-        ))}
-      </ol>
+                <span className="min-w-0 flex-1 truncate text-[13.5px] leading-snug group-hover:underline">
+                  {item.title}
+                </span>
+                {item.hot ? (
+                  <span
+                    className="chip shrink-0 px-2 py-0.5 text-[11px] font-medium"
+                    title="热度"
+                  >
+                    {item.hot}
+                  </span>
+                ) : null}
+                <span
+                  className="shrink-0 text-xs opacity-0 transition-opacity group-hover:opacity-60"
+                  style={{ color: "var(--muted)" }}
+                >
+                  ↗
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+          <span className="text-3xl opacity-70">📡</span>
+          <p className="text-sm font-medium">数据源暂不可用</p>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+            该平台接口本次抓取失败，未展示伪造数据。
+            <br />
+            可点击右上角 ↗ 前往官网查看，或刷新页面重试。
+          </p>
+        </div>
+      )}
     </section>
   );
 }
