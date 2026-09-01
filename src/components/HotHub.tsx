@@ -19,6 +19,7 @@ import {
 } from "@/lib/themes";
 import type { AggregateResult } from "@/lib/hotsearch";
 import type { Region } from "@/lib/hotsearch/types";
+import { buildDemoResult } from "@/lib/hotsearch/demo";
 
 type RegionFilter = "all" | Region;
 
@@ -43,14 +44,22 @@ export default function HotHub() {
     if (silent) setRefreshing(true);
     else setLoading(true);
     setError(null);
+    // 客户端超时保护：服务器长时间无响应时不再无限转圈
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
     try {
-      const res = await fetch(`/api/hot${force ? "?refresh=1" : ""}`);
+      const res = await fetch(`/api/hot${force ? "?refresh=1" : ""}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("接口异常");
       const json = (await res.json()) as AggregateResult;
       setData(json);
     } catch {
-      setError("热搜数据加载失败，请点击刷新重试");
+      // 接口失败时用内置演示数据兜底，页面始终有内容
+      setError("热搜接口加载失败，当前展示演示数据");
+      setData((prev) => prev ?? buildDemoResult());
     } finally {
+      clearTimeout(timer);
       setLoading(false);
       setRefreshing(false);
     }

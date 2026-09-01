@@ -1,6 +1,5 @@
 "use client";
 
-import type { MouseEvent } from "react";
 import type { PlatformData } from "@/lib/hotsearch/types";
 
 function rankClass(rank: number): string {
@@ -8,24 +7,6 @@ function rankClass(rank: number): string {
   if (rank === 2) return "rank-2";
   if (rank === 3) return "rank-3";
   return "rank-n";
-}
-
-/** 外链统一走本站 /go 中转，避免被目标站的 X-Frame-Options/CSP 拦截 */
-const goUrl = (raw: string) => `/go?u=${encodeURIComponent(raw)}`;
-
-function handleExternal(e: MouseEvent<HTMLAnchorElement>, url: string) {
-  // 保留 Ctrl/Cmd/Shift 点击、中键点击等浏览器原生行为
-  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-    return;
-  }
-  e.preventDefault();
-  const target = goUrl(url);
-  // 优先真正弹出新标签页（可绕开页面级链接拦截）
-  const win = window.open(target, "_blank", "noopener,noreferrer");
-  // 弹窗被拦截时退回当前页跳转
-  if (!win) {
-    window.location.assign(target);
-  }
 }
 
 export default function PlatformCard({
@@ -98,12 +79,11 @@ export default function PlatformCard({
             {data.live ? "实时" : "演示"}
           </span>
           <a
-            href={goUrl(data.home)}
+            href={data.home}
             target="_blank"
             rel="noreferrer"
-            title="打开官网（新标签页）"
+            title="打开官网"
             className="tool-btn flex h-8 w-8 items-center justify-center text-sm"
-            onClick={(e) => handleExternal(e, data.home)}
           >
             ↗
           </a>
@@ -115,12 +95,10 @@ export default function PlatformCard({
         {data.items.map((item, i) => (
           <li key={`${data.key}-${i}`}>
             <a
-              href={goUrl(item.url)}
+              href={item.url}
               target="_blank"
               rel="noreferrer"
-              title="新标签页打开"
               className="link-row group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
-              onClick={(e) => handleExternal(e, item.url)}
             >
               <span
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${rankClass(i + 1)}`}

@@ -9,13 +9,21 @@ async function fetchWithTimeout(
   url: string,
   init: RequestInit = {}
 ): Promise<Response> {
-  const res = await fetch(url, {
-    ...init,
-    signal: AbortSignal.timeout(TIMEOUT),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res;
+  // 不使用 AbortSignal.timeout：Cloudflare Workers(workerd)运行时不支持该 API。
+  // 改用 AbortController + setTimeout，Node / workerd 全兼容。
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT);
+  try {
+    const res = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function fetchJson(
@@ -61,6 +69,25 @@ function fmtNum(n: number): string {
 const limitItems = (items: HotItem[], max = 12): HotItem[] =>
   items.filter((i) => i && i.title && i.title.trim()).slice(0, max);
 
+/** 可见的 Unicode 文字（中文/日文/韩文/泰文等），在地址栏中保持原文显示 */
+const VISIBLE_UNICODE =
+  /^[\u0e00-\u0e7f\u2e80-\u9fff\u3000-\u303f\ua4d0-\ua95f\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]$/;
+
+/**
+ * 生成「干净」的 URL 参数：只有会破坏 URL 结构的字符（# & % ? 空格引号等）
+ * 才做百分号编码，中文等可见文字保持原文——地址栏不再出现 %E6%9F... 乱码。
+ * @param spaces 空格形式：查询参数用 "+"，路径段用 "%20"
+ */
+function prettyEnc(value: string, spaces: "+" | "%20" = "+"): string {
+  let out = "";
+  for (const ch of value) {
+    if (VISIBLE_UNICODE.test(ch)) out += ch;
+    else if (ch === " ") out += spaces;
+    else out += encodeURIComponent(ch);
+  }
+  return out;
+}
+
 /* ==================== 国内平台 ==================== */
 
 async function fetchBaidu(): Promise<HotItem[]> {
@@ -73,19 +100,19 @@ async function fetchBaidu(): Promise<HotItem[]> {
   if (list.length === 1 && Array.isArray(list[0]?.content)) {
     list = list[0].content;
   }
-  const items: HotItem[] = list.map((c) => ({
-    title: String(c.word ?? c.query ?? ""),
-    hot: c.isTop
-      ? "置顶"
-      : c.index
-        ? `TOP${c.index}`
-        : fmtHot(c.hotScore ?? c.heat_score),
-    url:
-      c.rawUrl ||
-      c.appUrl ||
-      c.url ||
-      `https://www.baidu.com/s?wd=${encodeURIComponent(String(c.word ?? ""))}`,
-  }));
+  const items: HotItem[] = list.map((c) => {
+    const word = String(c.word ?? c.query ?? "").trim();
+    return {
+      title: word,
+      hot: c.isTop
+        ? "置顶"
+        : c.index
+          ? `TOP${c.index}`
+          : fmtHot(c.hotScore ?? c.heat_score),
+      // 桌面端百度搜索 + 中文词条原文，避免移动端跳转拦截与 %-encoded 乱码
+      url: `https://www.baidu.com/s?wd=${prettyEnc(word)}`,
+    };
+  });
   if (!items.length) throw new Error("baidu empty");
   return limitItems(items);
 }
@@ -102,7 +129,7 @@ async function fetchWeibo(): Promise<HotItem[]> {
         list.map((w) => ({
           title: String(w.word ?? w.note ?? ""),
           hot: fmtHot(w.num ?? w.raw_hot),
-          url: `https://s.weibo.com/weibo?q=${encodeURIComponent(String(w.word ?? ""))}`,
+          url: `https://s.weibo.com/weibo?q=${prettyEnc(String(w.word ?? w.note ?? "").trim())}`,
         }))
       );
     }
@@ -117,7 +144,7 @@ async function fetchWeibo(): Promise<HotItem[]> {
   const items: HotItem[] = list.map((w) => ({
     title: String(w.desc ?? ""),
     hot: fmtHot(w.desc_extr),
-    url: `https://s.weibo.com/weibo?q=${encodeURIComponent(String(w.desc ?? ""))}`,
+    url: `https://s.weibo.com/weibo?q=${prettyEnc(String(w.desc ?? "").trim())}`,
   }));
   if (!items.length) throw new Error("weibo empty");
   return limitItems(items);
@@ -131,7 +158,7 @@ async function fetchBilibili(): Promise<HotItem[]> {
   const items: HotItem[] = list.map((w) => ({
     title: String(w.keyword ?? ""),
     hot: String(w.show_name ?? ""),
-    url: `https://search.bilibili.com/all?keyword=${encodeURIComponent(String(w.keyword ?? ""))}`,
+    url: `https://search.bilibili.com/all?keyword=${prettyEnc(String(w.keyword ?? "").trim())}`,
   }));
   if (!items.length) throw new Error("bilibili empty");
   return limitItems(items);
@@ -153,8 +180,8 @@ async function fetchZhihu(): Promise<HotItem[]> {
     if (!url) {
       url = id
         ? `https://www.zhihu.com/question/${id}`
-        : `https://www.zhihu.com/search?type=content&q=${encodeURIComponent(
-            String(t?.title ?? "")
+        : `https://www.zhihu.com/search?type=content&q=${prettyEnc(
+            String(t?.title ?? "").trim()
           )}`;
     }
     return {
@@ -176,7 +203,8 @@ async function fetchDouyin(): Promise<HotItem[]> {
   const items: HotItem[] = list.map((w) => ({
     title: String(w.word ?? ""),
     hot: fmtHot(w.hot_value),
-    url: `https://www.douyin.com/search/${encodeURIComponent(String(w.word ?? ""))}`,
+    // 路径段中的空格用 %20（"+" 在路径里不代表空格）
+    url: `https://www.douyin.com/search/${prettyEnc(String(w.word ?? "").trim(), "%20")}`,
   }));
   if (!items.length) throw new Error("douyin empty");
   return limitItems(items);
@@ -195,12 +223,16 @@ async function fetchGoogleTrends(): Promise<HotItem[]> {
     const list: AnyObj[] = day?.trendingSearches ?? [];
     const items: HotItem[] = list.map((t) => {
       const q = String(t?.title?.query ?? "");
+      const article = String(t?.articles?.[0]?.url ?? "");
+      // 文章链接若指向 RSS/XML 源，点击会显示裸 XML 界面，改用 Google 搜索页
+      const url =
+        article && !/(rss|xml)/i.test(article)
+          ? article
+          : `https://www.google.com/search?q=${prettyEnc(q)}`;
       return {
         title: q,
         hot: String(t?.formattedTraffic ?? ""),
-        url:
-          t?.articles?.[0]?.url ||
-          `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+        url,
       };
     });
     if (items.length) return limitItems(items);
@@ -214,11 +246,11 @@ async function fetchGoogleTrends(): Promise<HotItem[]> {
   const items: HotItem[] = blocks.map((b) => {
     const title = b.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1]?.trim() ?? "";
     const traffic = b.match(/<ht:approx_traffic>([\s\S]*?)<\/ht:approx_traffic>/)?.[1]?.trim() ?? "";
-    const link = b.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim() ?? "";
+    // RSS 里的 <link> 是订阅源地址（点开是 XML），一律用 Google 搜索页
     return {
       title,
       hot: traffic,
-      url: link || `https://www.google.com/search?q=${encodeURIComponent(title)}`,
+      url: `https://www.google.com/search?q=${prettyEnc(title)}`,
     };
   });
   if (!items.length) throw new Error("google empty");
@@ -320,13 +352,13 @@ async function fetchTwitter(): Promise<HotItem[]> {
   );
   const trends: AnyObj[] = json?.[0]?.trends ?? [];
   const items: HotItem[] = trends.map((t) => {
-    const name = String(t?.name ?? "");
+    // 去掉趋势词两端的引号（如 "Happy New Month"），链接和标题都更干净
+    const name = String(t?.name ?? "").replace(/^["']+|["']+$/g, "").trim();
     return {
       title: name,
       hot: t?.tweet_volume ? `${fmtHot(t.tweet_volume)} 推文` : "",
-      url: String(
-        t?.url ?? `https://x.com/search?q=${encodeURIComponent(name)}`
-      ),
+      // 自己构造搜索链接（API 返回的 http 老链接是 %-encoded 的）
+      url: `https://x.com/search?q=${prettyEnc(name)}`,
     };
   });
   if (!items.length) throw new Error("twitter empty");

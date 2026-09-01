@@ -101,7 +101,8 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "hackernews",
     name: "Hacker News",
-    icon: "/favicons/hackernews.ico",
+    // 用本地矢量 SVG（.ico 在部分部署环境存在兼容问题）
+    icon: "/icons/hackernews.svg",
     region: "overseas",
     home: "https://news.ycombinator.com/",
     color: "#f0652f",

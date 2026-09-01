@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // pg / drizzle-orm 仅在有 DATABASE_URL 时动态加载。
-  // 保持为外部包，避免被 bundle 进 Cloudflare Workers 构建产物
-  // （Workers 运行时没有 node:net，且无数据库时根本不会加载它们）。
-  serverExternalPackages: ["pg", "drizzle-orm"],
+  // 仅 pg 保持外部包：它只在配置了 DATABASE_URL 时被动态加载。
+  // drizzle-orm 是纯 JS，必须正常打包（Cloudflare Workers 运行时没有
+  // node_modules 解析，若也设为外部包会导致模块加载失败、整站打不开）。
+  serverExternalPackages: ["pg"],
 };
 
 export default nextConfig;
