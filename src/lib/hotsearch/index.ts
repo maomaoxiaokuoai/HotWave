@@ -5,7 +5,7 @@ import { PLATFORMS, type PlatformData } from "./types";
 import { fetchPlatform } from "./fetchers";
 import { FALLBACK } from "./fallback";
 
-const CACHE_KEY = "hot:v5"; // v5: 干净中文链接 + HN 图标改 SVG + Google 链接修复
+const CACHE_KEY = "hot:v6"; // v6: 百度词条改为资讯直达(tn=news)
 const MEMORY_TTL = 60_000; // 内存缓存 60 秒
 const DB_TTL = 120_000; // 数据库缓存 120 秒
 

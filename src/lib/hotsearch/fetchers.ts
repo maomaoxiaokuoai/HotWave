@@ -109,8 +109,8 @@ async function fetchBaidu(): Promise<HotItem[]> {
         : c.index
           ? `TOP${c.index}`
           : fmtHot(c.hotScore ?? c.heat_score),
-      // 桌面端百度搜索 + 中文词条原文，避免移动端跳转拦截与 %-encoded 乱码
-      url: `https://www.baidu.com/s?wd=${prettyEnc(word)}`,
+      // 百度资讯直达：点开即展示该词条对应的新闻文章（tn=news 资讯频道 + rtt=1 按时间排序）
+      url: `https://www.baidu.com/s?tn=news&rtt=1&word=${prettyEnc(word)}`,
     };
   });
   if (!items.length) throw new Error("baidu empty");
