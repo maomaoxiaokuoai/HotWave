@@ -210,6 +210,74 @@ async function fetchDouyin(): Promise<HotItem[]> {
   return limitItems(items);
 }
 
+async function fetchToutiao(): Promise<HotItem[]> {
+  const json: AnyObj = await fetchJson(
+    "https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc",
+    { referer: "https://www.toutiao.com/" }
+  );
+  const list: AnyObj[] = json?.data ?? [];
+  const items: HotItem[] = list.map((it) => {
+    const title = String(it?.Title ?? "").trim();
+    const url = String(it?.Url ?? "");
+    return {
+      title,
+      hot: fmtHot(it?.HotValue),
+      // Url 为事件/文章直达页（toutiao.com/trending/或/article/），缺失时退回头条搜索
+      url: /^https?:\/\//i.test(url)
+        ? url
+        : `https://so.toutiao.com/search?keyword=${prettyEnc(title)}`,
+    };
+  });
+  if (!items.length) throw new Error("toutiao empty");
+  return limitItems(items);
+}
+
+async function fetchTencent(): Promise<HotItem[]> {
+  const json: AnyObj = await fetchJson(
+    "https://r.inews.qq.com/gw/event/hot_ranking_list?page_size=50",
+    { referer: "https://news.qq.com/" }
+  );
+  const sections: AnyObj[] = json?.idlist ?? [];
+  const items: HotItem[] = [];
+  for (const s of sections) {
+    for (const n of s?.newslist ?? []) {
+      const title = String(n?.title ?? "").trim();
+      const url = String(n?.url ?? "");
+      // 跳过无链接的栏目头（如"腾讯新闻用户最关注的热点"）
+      if (title && /^https?:/i.test(url)) {
+        items.push({
+          title,
+          hot: n?.readCount ? `${fmtHot(n.readCount)} 阅读` : "",
+          // view.inews.qq.com 为文章直达页
+          url,
+        });
+      }
+    }
+  }
+  if (!items.length) throw new Error("tencent empty");
+  return limitItems(items);
+}
+
+async function fetchNetease(): Promise<HotItem[]> {
+  const raw = await fetchText(
+    "https://news.163.com/special/cm_yaowen20200213/?callback=data_callback",
+    { referer: "https://news.163.com/" }
+  );
+  // JSONP：data_callback([{title, docurl, tienum, ...}])
+  const m = raw.match(/data_callback\s*\(\s*([\s\S]*?)\s*\)\s*;?\s*$/);
+  const data: AnyObj = JSON.parse(m ? m[1] : raw);
+  const list: AnyObj[] = Array.isArray(data) ? data : [];
+  const items: HotItem[] = list
+    .map((n) => ({
+      title: String(n?.title ?? "").trim(),
+      hot: n?.tienum ? `${fmtHot(n.tienum)} 跟帖` : "",
+      url: String(n?.docurl ?? ""),
+    }))
+    .filter((i) => i.title && i.url);
+  if (!items.length) throw new Error("netease empty");
+  return limitItems(items);
+}
+
 /* ==================== 海外平台 ==================== */
 
 async function fetchGoogleTrends(): Promise<HotItem[]> {
@@ -453,13 +521,20 @@ export interface FetchResult {
 
 type Fetcher = () => Promise<HotItem[]>;
 
-/** 全部 10 个平台实时抓取（单个失败自动降级演示数据） */
+/**
+ * 实时抓取注册表。
+ * 快手 / 国内Bing / 国际Bing 无公开热搜接口（官方均为 JS 动态加载），
+ * 未注册时展示演示数据，点击跳转对应平台的搜索页。
+ */
 const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
   baidu: fetchBaidu,
   weibo: fetchWeibo,
   bilibili: fetchBilibili,
   zhihu: fetchZhihu,
   douyin: fetchDouyin,
+  toutiao: fetchToutiao,
+  tencent: fetchTencent,
+  netease: fetchNetease,
   google: fetchGoogleTrends,
   reddit: fetchReddit,
   hackernews: fetchHackerNews,

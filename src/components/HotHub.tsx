@@ -387,8 +387,9 @@ export default function HotHub() {
           style={{ borderColor: "var(--border)", color: "var(--muted)" }}
         >
           <p>
-            热浪聚合 · 数据来自 百度 / 微博 / B站 / 知乎 / 抖音 / Google Trends /
-            Reddit / Hacker News 等公开接口
+            热浪聚合 · 数据来自 百度 / 微博 / 抖音 / 今日头条 / B站 / 知乎 / 快手 /
+            腾讯新闻 / 网易新闻 / 国内Bing / Google Trends / 国际Bing / Reddit /
+            Hacker News / X / YouTube 等公开接口
           </p>
           <p className="mt-1">
             部分平台接口受网络环境影响，实时抓取失败时将展示演示数据 · 点击榜单条目可跳转源站
