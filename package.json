@@ -1,9 +1,12 @@
 {
-  "name": "nextjs-postgresql-template",
+  "name": "hotwave",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
@@ -13,10 +16,12 @@
     "drizzle-orm": "0.45.2",
     "next": "16.2.6",
     "pg": "8.20.0",
+    "pg-cloudflare": "1.4.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.19.0",
     "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.19.15",
     "@types/pg": "8.18.0",
@@ -27,6 +32,7 @@
     "eslint-config-next": "16.2.6",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "wrangler": "4.127.1"
   }
 }

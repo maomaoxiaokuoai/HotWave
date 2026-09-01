@@ -71,22 +71,22 @@ npx drizzle-kit push --config=config/drizzle.config.json   # 推送表结构
 
 | 配置项 | 值 |
 |--------|-----|
-| Build command | `npm install && npx @opennextjs/cloudflare build` |
+| Build command | `npm run cf:build` |
 | Deploy command | `npx wrangler deploy` |
 
 4. 保存。之后每次 `git push` 都会自动构建并上线。
 
 > ⚠️ 两个关键点：
 > - 仓库里已含 `.node-version`(Node 22)，CF 构建镜像会自动使用它（Next.js 16 要求 Node ≥ 20.9，默认镜像版本过旧会导致构建失败）
-> - 不要手动创建 wrangler.toml/wrangler.jsonc，`@opennextjs/cloudflare` 构建时会自动生成正确的配置（含 nodejs_compat 标志），手动配置反而容易冲突
+> - `wrangler.jsonc` 与 `open-next.config.ts` 已提交到仓库。请勿删除它们，也不要使用 `npx wrangler deploy` 的自动迁移功能；这会让 CI 临时改写依赖，导致构建不稳定。
 
 ### 方式二：本地命令行部署
 
 ```bash
-npm i -D @opennextjs/cloudflare wrangler
-npx @opennextjs/cloudflare build     # 本地验证构建（会自动生成 wrangler 配置）
+npm install
+npm run cf:build                     # 本地验证构建
 npx wrangler login                   # 首次登录 Cloudflare 账号
-npx opennextjs-cloudflare deploy     # 一键部署到 Workers
+npm run cf:deploy                    # 一键部署到 Workers
 ```
 
 ### 可选环境变量（Cloudflare）
