@@ -1,0 +1,704 @@
+@import "tailwindcss";
+
+/* ==================== 主题变量 ==================== */
+
+:root,
+[data-theme="frost"] {
+  --bg: #e8f2ff;
+  --bg2: #f7fbff;
+  --card: rgba(255, 255, 255, 0.92);
+  --border: rgba(96, 165, 250, 0.24);
+  --text: #10294b;
+  --muted: #5f7ea0;
+  --accent: #2f7cf6;
+  --accent2: #38bdf8;
+  --chip: #e3efff;
+  --chip-text: #1d4ed8;
+  --shadow: 0 10px 34px rgba(47, 124, 246, 0.1);
+  --snow: #7fb3e8;
+  --rain: #6fa8dd;
+  --radius: 18px;
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+}
+
+[data-theme="cyber"] {
+  --bg: #0a0214;
+  --bg2: #160a2e;
+  --card: rgba(20, 8, 44, 0.82);
+  --border: rgba(34, 211, 238, 0.35);
+  --text: #d6fbff;
+  --muted: #7d94c9;
+  --accent: #22d3ee;
+  --accent2: #e879f9;
+  --chip: rgba(34, 211, 238, 0.13);
+  --chip-text: #67e8f9;
+  --shadow: 0 0 26px rgba(34, 211, 238, 0.16), 0 12px 40px rgba(0, 0, 0, 0.5);
+  --snow: #9fefff;
+  --rain: #7dd3fc;
+}
+
+[data-theme="sakura"] {
+  --bg: #ffeef4;
+  --bg2: #fff8fa;
+  --card: rgba(255, 255, 255, 0.9);
+  --border: rgba(244, 114, 182, 0.26);
+  --text: #5b2140;
+  --muted: #a06a85;
+  --accent: #ec4899;
+  --accent2: #f472b6;
+  --chip: #ffe0ec;
+  --chip-text: #db2777;
+  --shadow: 0 10px 34px rgba(236, 72, 153, 0.12);
+  --snow: #ffd9ea;
+  --radius: 20px;
+}
+
+[data-theme="retro"] {
+  --bg: #f3ead8;
+  --bg2: #efe2c8;
+  --card: #fdf8ec;
+  --border: rgba(139, 94, 52, 0.38);
+  --text: #3c2a1a;
+  --muted: #8a7355;
+  --accent: #b45309;
+  --accent2: #a16207;
+  --chip: #efe0c3;
+  --chip-text: #92400e;
+  --shadow: 4px 4px 0 rgba(60, 42, 26, 0.16);
+  --snow: #c9b28d;
+  --radius: 4px;
+  --font: "Songti SC", "STSong", "SimSun", Georgia, "Times New Roman", serif;
+}
+
+[data-theme="aurora"] {
+  --bg: #051718;
+  --bg2: #0c2c2e;
+  --card: rgba(12, 44, 46, 0.85);
+  --border: rgba(45, 212, 191, 0.28);
+  --text: #e6fffb;
+  --muted: #7fb5ae;
+  --accent: #2dd4bf;
+  --accent2: #38bdf8;
+  --chip: rgba(45, 212, 191, 0.16);
+  --chip-text: #5eead4;
+  --shadow: 0 0 30px rgba(45, 212, 191, 0.14), 0 14px 44px rgba(0, 0, 0, 0.5);
+  --snow: #c9fff3;
+  --rain: #99e6dd;
+  --radius: 22px;
+}
+
+[data-theme="mono"] {
+  --bg: #0a0a0a;
+  --bg2: #161616;
+  --card: rgba(20, 20, 20, 0.92);
+  --border: rgba(255, 255, 255, 0.14);
+  --text: #f5f5f5;
+  --muted: #8a8a8a;
+  --accent: #ffffff;
+  --accent2: #a3a3a3;
+  --chip: rgba(255, 255, 255, 0.1);
+  --chip-text: #e5e5e5;
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+  --snow: #ffffff;
+  --rain: #9ca3af;
+  --radius: 12px;
+}
+
+/* 液态玻璃：苹果风格——深色底 + 彩色折射光斑 + 强模糊高光玻璃卡片 */
+[data-theme="glass"] {
+  --bg: #0e1420;
+  --bg2: #1a2334;
+  --card: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.22);
+  --text: #f0f4fb;
+  --muted: #9aa7bd;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --chip: rgba(255, 255, 255, 0.13);
+  --chip-text: #cfe3ff;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --snow: #ffffff;
+  --rain: #a5c8ff;
+  --radius: 26px;
+}
+
+/* 崩坏错误：故障艺术——RGB 分裂 + 故障条纹 + 扫描线 + 红色错误噪点 */
+[data-theme="glitch"] {
+  --bg: #08080c;
+  --bg2: #14141c;
+  --card: rgba(16, 16, 24, 0.9);
+  --border: rgba(255, 0, 102, 0.4);
+  --text: #e6f1ff;
+  --muted: #7c8ba6;
+  --accent: #ff0066;
+  --accent2: #00e5ff;
+  --chip: rgba(255, 0, 102, 0.14);
+  --chip-text: #ff4d94;
+  --shadow: 0 0 0 1px rgba(255, 0, 102, 0.25), 0 0 24px rgba(255, 0, 102, 0.18);
+  --snow: #ffffff;
+  --rain: #c9d7ff;
+  --radius: 2px;
+  --font: "SFMono-Regular", "Cascadia Mono", "JetBrains Mono", Consolas,
+    "Courier New", monospace;
+}
+
+/* ==================== 基础样式 ==================== */
+
+html {
+  color-scheme: light;
+}
+[data-theme="cyber"],
+[data-theme="aurora"],
+[data-theme="mono"],
+[data-theme="glass"],
+[data-theme="glitch"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  transition: background-color 0.45s ease, color 0.45s ease;
+}
+
+.app-bg {
+  min-height: 100dvh;
+  background: linear-gradient(165deg, var(--bg), var(--bg2));
+  transition: background 0.45s ease;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease, background-color 0.45s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.chip {
+  background: var(--chip);
+  color: var(--chip-text);
+  border-radius: 999px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.tool-btn {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tool-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tool-btn[data-active="true"] {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.rank-n {
+  background: var(--chip);
+  color: var(--chip-text);
+}
+.rank-1 {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #fff;
+}
+.rank-2 {
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  color: #fff;
+}
+.rank-3 {
+  background: linear-gradient(135deg, #f59e0b, #eab308);
+  color: #fff;
+}
+
+.title-gradient {
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  animation: livepulse 1.6s infinite;
+}
+.demo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #f59e0b;
+  animation: livepulse 2.2s infinite;
+}
+.fail-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #ef4444;
+}
+
+.link-row:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.snow-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+/* 鼠标点击特效画布：位于天气特效之上 */
+.click-fx-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 65;
+}
+
+@keyframes livepulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+/* 主题个性化细节 */
+[data-theme="cyber"] .card {
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent),
+    var(--shadow);
+}
+[data-theme="aurora"] .card {
+  box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 20%, transparent),
+    var(--shadow);
+  background: linear-gradient(
+    150deg,
+    rgba(12, 44, 46, 0.92),
+    rgba(8, 28, 32, 0.88)
+  );
+}
+[data-theme="mono"] .card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+[data-theme="mono"] .card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* 液态玻璃的质感细节 */
+[data-theme="glass"] .app-bg {
+  background:
+    radial-gradient(58% 48% at 12% 8%, rgba(56, 189, 248, 0.24), transparent 62%),
+    radial-gradient(48% 42% at 88% 18%, rgba(129, 140, 248, 0.22), transparent 60%),
+    radial-gradient(52% 46% at 72% 92%, rgba(34, 211, 238, 0.16), transparent 62%),
+    radial-gradient(40% 36% at 20% 78%, rgba(236, 72, 153, 0.12), transparent 60%),
+    linear-gradient(165deg, #0e1420, #1a2334);
+}
+[data-theme="glass"] .card {
+  backdrop-filter: blur(26px) saturate(175%);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.13),
+    rgba(255, 255, 255, 0.05) 52%,
+    rgba(255, 255, 255, 0.1)
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+    0 24px 60px rgba(0, 0, 0, 0.5);
+}
+[data-theme="glass"] .card:hover {
+  border-color: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.09),
+    0 30px 70px rgba(0, 0, 0, 0.55);
+}
+[data-theme="glass"] .tool-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+[data-theme="glass"] .chip {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+/* ============ 崩坏错误主题特效 ============ */
+
+/* 背景：CSS 信号干扰 + 红色噪点 */
+[data-theme="glitch"] .app-bg {
+  background:
+    radial-gradient(50% 40% at 18% 12%, rgba(255, 0, 102, 0.12), transparent 60%),
+    radial-gradient(46% 38% at 84% 22%, rgba(0, 229, 255, 0.1), transparent 60%),
+    linear-gradient(165deg, #08080c, #14141c);
+  animation: glitch-bg 2.4s infinite steps(2, jump-none);
+}
+[data-theme="glitch"] .app-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03) 0 1px,
+    transparent 1px 4px
+  );
+  animation: glitch-scanline 7s linear infinite;
+}
+[data-theme="glitch"] .app-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: glitch-noise 0.5s infinite steps(3);
+}
+
+/* 标题 RGB 分裂 + 抖动 */
+[data-theme="glitch"] .title-gradient {
+  position: relative;
+  background: none;
+  color: #fff;
+  text-shadow: 3px 0 rgba(255, 0, 102, 0.8), -3px 0 rgba(0, 229, 255, 0.8);
+  animation: glitch-text 2.2s infinite steps(2, jump-none);
+}
+
+/* 卡片故障边框闪烁 + hover 撕裂 */
+[data-theme="glitch"] .card {
+  border-radius: 2px;
+  background: rgba(16, 16, 24, 0.9);
+  border: 1px solid rgba(255, 0, 102, 0.4);
+  box-shadow: 0 0 0 1px rgba(255, 0, 102, 0.25), 0 0 24px rgba(255, 0, 102, 0.18);
+  animation: glitch-card 3.7s infinite;
+}
+[data-theme="glitch"] .card:hover {
+  animation: glitch-card-hover 0.3s infinite steps(2);
+}
+
+[data-theme="glitch"] .tool-btn {
+  border-radius: 2px;
+  background: rgba(16, 16, 24, 0.9);
+  border-color: rgba(255, 0, 102, 0.4);
+}
+[data-theme="glitch"] .tool-btn[data-active="true"] {
+  background: var(--accent);
+  box-shadow: 0 0 16px rgba(255, 0, 102, 0.5);
+}
+
+[data-theme="glitch"] .chip {
+  border-radius: 2px;
+}
+
+@keyframes glitch-bg {
+  0%,
+  93%,
+  100% {
+    transform: none;
+  }
+  94% {
+    transform: translateX(-2px);
+  }
+  95% {
+    transform: translateX(2px) skewX(0.3deg);
+  }
+  96% {
+    transform: translateY(1px);
+  }
+}
+@keyframes glitch-scanline {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100vh);
+  }
+}
+@keyframes glitch-noise {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-3px, 2px);
+  }
+  50% {
+    transform: translate(2px, -3px);
+  }
+  75% {
+    transform: translate(-2px, -2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes glitch-text {
+  0%,
+  91%,
+  100% {
+    transform: none;
+    filter: none;
+  }
+  92% {
+    transform: translateX(-3px);
+    filter: hue-rotate(24deg);
+  }
+  93% {
+    transform: translateX(3px) skewX(2deg);
+  }
+  94% {
+    transform: translateX(-2px);
+    filter: none;
+  }
+}
+@keyframes glitch-card {
+  0%,
+  90%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(255, 0, 102, 0.25), 0 0 24px rgba(255, 0, 102, 0.18);
+    transform: none;
+  }
+  91% {
+    box-shadow: 3px 0 rgba(255, 0, 102, 0.45), -3px 0 rgba(0, 229, 255, 0.45);
+    transform: translateX(1px);
+  }
+  92% {
+    box-shadow: -3px 0 rgba(255, 0, 102, 0.45), 3px 0 rgba(0, 229, 255, 0.45);
+    transform: translateX(-1px);
+  }
+}
+@keyframes glitch-card-hover {
+  0%,
+  100% {
+    transform: none;
+    border-color: rgba(255, 0, 102, 0.4);
+  }
+  50% {
+    transform: translateX(2px) skewX(0.6deg);
+    border-color: rgba(0, 229, 255, 0.8);
+  }
+}
+
+/* ============ 崩坏主题：错误代码闪现 ============ */
+
+/* 崩溃横幅：周期性的全宽红底错误条扫过顶部 */
+[data-theme="glitch"] .app-bg > div:first-of-type::before {
+  content: "SYSTEM FAILURE // 0xDEADBEEF // SYSTEM FAILURE // 0xDEADBEEF";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 70;
+  padding: 5px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  background: repeating-linear-gradient(
+    90deg,
+    #b00030 0 24px,
+    #8a0026 24px 48px
+  );
+  opacity: 0;
+  animation: glitch-crash 9s infinite steps(1);
+}
+@keyframes glitch-crash {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  9% {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+  10% {
+    transform: translateY(0);
+  }
+  13% {
+    opacity: 1;
+    transform: translateX(4px);
+  }
+  14% {
+    transform: translateX(-4px);
+  }
+  15% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 红屏闪爆：瞬间全屏红色叠加后恢复 */
+[data-theme="glitch"] .app-bg > div:first-of-type::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  pointer-events: none;
+  background: #ff0033;
+  opacity: 0;
+  animation: glitch-redflash 9s infinite steps(1);
+}
+@keyframes glitch-redflash {
+  0%,
+  10.5% {
+    opacity: 0;
+  }
+  11% {
+    opacity: 0.22;
+  }
+  11.5% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.15;
+  }
+  12.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 角落错误码显示器：多个错误码循环闪现 */
+[data-theme="glitch"] body::before {
+  content: "ERR_SYS_CORRUPT 0x0000007E";
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 70;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ff4d6d;
+  background: rgba(10, 4, 8, 0.85);
+  border: 1px solid rgba(255, 0, 102, 0.55);
+  box-shadow: 0 0 12px rgba(255, 0, 102, 0.35);
+  animation: glitch-err 4.2s infinite steps(1);
+}
+[data-theme="glitch"] body::after {
+  content: "SIGSEGV 0x7F2A";
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 70;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #4dd6ff;
+  background: rgba(4, 10, 14, 0.85);
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+  animation: glitch-err2 3.3s infinite steps(1);
+}
+@keyframes glitch-err {
+  0%,
+  12%,
+  100% {
+    content: "ERR_SYS_CORRUPT 0x0000007E";
+  }
+  13%,
+  26% {
+    content: "KERNEL PANIC // NOT SYNCING";
+  }
+  27%,
+  40% {
+    content: "STACK OVERFLOW 0xC00000FD";
+  }
+  41%,
+  54% {
+    content: "FATAL EXCEPTION 0xE06D7363";
+  }
+  55%,
+  68% {
+    content: "ILLEGAL INSTRUCTION";
+  }
+  69%,
+  82% {
+    content: "OUT OF MEMORY // HEAP CORRUPT";
+  }
+  83%,
+  99% {
+    content: "BSOD 0x0000001E";
+  }
+}
+@keyframes glitch-err2 {
+  0%,
+  16%,
+  100% {
+    content: "SIGSEGV 0x7F2A";
+  }
+  17%,
+  33% {
+    content: "NULL PTR DEREFERENCE";
+  }
+  34%,
+  50% {
+    content: "SEGMENTATION FAULT";
+  }
+  51%,
+  66% {
+    content: "DOUBLE FAULT 0x00000008";
+  }
+  67%,
+  83% {
+    content: "BUFFER OVERRUN DETECTED";
+  }
+  84%,
+  99% {
+    content: "ACCESS VIOLATION 0x00000005";
+  }
+}
+[data-theme="cyber"] .tool-btn[data-active="true"] {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+[data-theme="retro"] .tool-btn {
+  border-radius: 3px;
+}
+[data-theme="retro"] .tool-btn[data-active="true"] {
+  border-radius: 3px;
+}
+[data-theme="retro"] .chip {
+  border-radius: 3px;
+}
+
