@@ -67,8 +67,9 @@ export default function ClickFX({ mode }: { mode: ClickMode }) {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = window.innerWidth;
-      h = window.innerHeight;
+      const viewport = window.visualViewport;
+      w = Math.ceil(viewport?.width ?? window.innerWidth);
+      h = Math.ceil(viewport?.height ?? window.innerHeight);
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       canvas.style.width = `${w}px`;
@@ -210,11 +211,13 @@ export default function ClickFX({ mode }: { mode: ClickMode }) {
 
     resize();
     window.addEventListener("resize", resize);
+    window.visualViewport?.addEventListener("resize", resize);
     window.addEventListener("pointerdown", onPointerDown);
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.visualViewport?.removeEventListener("resize", resize);
       window.removeEventListener("pointerdown", onPointerDown);
     };
   }, []);

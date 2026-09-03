@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PlatformCard from "./ui/PlatformCard";
 import WeatherFX from "./fx/WeatherFX";
 import ClickFX from "./fx/ClickFX";
+import GlitchFX from "./fx/GlitchFX";
 import { Icon } from "./ui/icons";
 import {
   CLICK_DEFS,
@@ -211,6 +212,7 @@ export default function HotHub() {
     <div className="app-bg">
       <WeatherFX fx={fx} intensity={intensity} theme={theme} />
       <ClickFX mode={clickFx} />
+      <GlitchFX active={theme === "glitch"} />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6">
         {/* ============ 顶部栏 ============ */}
@@ -324,11 +326,6 @@ export default function HotHub() {
             </>
           )}
 
-          {fx === "storm" && (
-            <span className="text-xs" style={{ color: "var(--muted)" }}>
-              ⚡ 强度越大：雨越密、闪电越频繁越亮
-            </span>
-          )}
         </nav>
 
         {/* ============ 鼠标点击特效 ============ */}

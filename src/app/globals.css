@@ -260,6 +260,9 @@ body {
 .snow-canvas {
   position: fixed;
   inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100dvh;
   pointer-events: none;
   z-index: 60;
 }
@@ -268,6 +271,9 @@ body {
 .click-fx-canvas {
   position: fixed;
   inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100dvh;
   pointer-events: none;
   z-index: 65;
 }
@@ -367,6 +373,7 @@ body {
     radial-gradient(50% 40% at 18% 12%, rgba(255, 0, 102, 0.12), transparent 60%),
     radial-gradient(46% 38% at 84% 22%, rgba(0, 229, 255, 0.1), transparent 60%),
     linear-gradient(165deg, #08080c, #14141c);
+  background-size: 140% 140%;
   animation: glitch-bg 2.4s infinite steps(2, jump-none);
 }
 [data-theme="glitch"] .app-bg::before {
@@ -391,6 +398,36 @@ body {
   opacity: 0.14;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: glitch-noise 0.5s infinite steps(3);
+}
+
+/* 随机分布的破裂切片独立于页面容器，避免影响 fixed Canvas 的定位。 */
+.glitch-fragments {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  overflow: hidden;
+  pointer-events: none;
+}
+.glitch-shard {
+  position: absolute;
+  display: block;
+  opacity: 0;
+  clip-path: polygon(0 25%, 83% 0, 100% 40%, 76% 100%, 12% 76%);
+  mix-blend-mode: screen;
+  animation-name: glitch-shard;
+  animation-timing-function: steps(2, jump-none);
+  animation-iteration-count: infinite;
+}
+.glitch-shard-pink {
+  background: linear-gradient(90deg, transparent, rgba(255, 0, 102, 0.82), transparent);
+  box-shadow: 0 0 14px rgba(255, 0, 102, 0.65);
+}
+.glitch-shard-cyan {
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.8), transparent);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.58);
+}
+.glitch-shard-white {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
 }
 
 /* 标题 RGB 分裂 + 抖动 */
@@ -432,16 +469,39 @@ body {
   0%,
   93%,
   100% {
-    transform: none;
+    background-position: 0 0;
   }
   94% {
-    transform: translateX(-2px);
+    background-position: -8px 4px;
   }
   95% {
-    transform: translateX(2px) skewX(0.3deg);
+    background-position: 10px -5px;
   }
   96% {
-    transform: translateY(1px);
+    background-position: -4px 8px;
+  }
+}
+@keyframes glitch-shard {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+  74% {
+    opacity: 0.9;
+    transform: translate3d(-18px, 3px, 0) skewX(-16deg);
+  }
+  77% {
+    opacity: 0.24;
+    transform: translate3d(24px, -4px, 0) skewX(12deg);
+  }
+  80% {
+    opacity: 0.72;
+    transform: translate3d(-8px, 1px, 0) skewX(-8deg);
+  }
+  83% {
+    opacity: 0;
   }
 }
 @keyframes glitch-scanline {
