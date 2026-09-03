@@ -153,7 +153,7 @@ export const PLATFORMS: PlatformDef[] = [
   },
   {
     key: "twitter",
-    name: "X / 推特热搜",
+    name: "x",
     icon: "/icons/x.png",
     region: "overseas",
     home: "https://x.com/explore/tabs/trending",
