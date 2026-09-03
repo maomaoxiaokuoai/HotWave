@@ -30,7 +30,7 @@ export interface HotItem {
 export interface PlatformDef {
   key: PlatformKey;
   name: string;
-  /** SVG 品牌图标路径（本地 public 资源） */
+  /** 本地平台图标路径（public 资源） */
   icon: string;
   /** 图标底色：默认用品牌色 16% 透明，深色图标需提供实底 */
   chipBg?: string;
@@ -155,7 +155,6 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "hackernews",
     name: "Hacker News",
-    // 用本地矢量 SVG（.ico 在部分部署环境存在兼容问题）
     icon: "/icons/hackernews.png",
     region: "overseas",
     home: "https://news.ycombinator.com/",
