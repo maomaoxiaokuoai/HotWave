@@ -50,7 +50,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "baidu",
     name: "百度热搜",
-    icon: "/favicons/baidu.ico",
+    icon: "/icons/baidu.png",
     region: "domestic",
     home: "https://top.baidu.com/board?tab=realtime",
     color: "#2932e1",
@@ -58,7 +58,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "weibo",
     name: "微博热搜",
-    icon: "/favicons/weibo.ico",
+    icon: "/icons/weibo.png",
     region: "domestic",
     home: "https://weibo.com/hot/search",
     color: "#e6162d",
@@ -66,7 +66,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "bilibili",
     name: "B站热搜",
-    icon: "/favicons/bilibili.ico",
+    icon: "/icons/bilibili.png",
     region: "domestic",
     home: "https://www.bilibili.com/",
     color: "#00a1d6",
@@ -74,7 +74,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "zhihu",
     name: "知乎热榜",
-    icon: "/favicons/zhihu.ico",
+    icon: "/icons/zhihu.png",
     region: "domestic",
     home: "https://www.zhihu.com/hot",
     color: "#0084ff",
@@ -82,8 +82,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "douyin",
     name: "抖音热点",
-    icon: "/icons/douyin.svg",
-    // 标准彩色音符(黑+红+青)放白色底上，避免官网深色版 favicon 在卡片上糊成一片白
+    icon: "/icons/douyin.png",
     chipBg: "#ffffff",
     region: "domestic",
     home: "https://www.douyin.com/hot",
@@ -92,7 +91,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "toutiao",
     name: "今日头条",
-    icon: "/favicons/toutiao.ico",
+    icon: "/icons/toutiao.png",
     region: "domestic",
     home: "https://www.toutiao.com/",
     color: "#f04142",
@@ -100,7 +99,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "kuaishou",
     name: "快手热搜",
-    icon: "/favicons/kuaishou.ico",
+    icon: "/icons/kuaishou.png",
     region: "domestic",
     home: "https://www.kuaishou.com/",
     color: "#ff6423",
@@ -108,7 +107,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "tencent",
     name: "腾讯新闻",
-    icon: "/favicons/tencent.ico",
+    icon: "/icons/qqnews.png",
     region: "domestic",
     home: "https://news.qq.com/",
     color: "#1e6fff",
@@ -116,7 +115,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "netease",
     name: "网易新闻",
-    icon: "/favicons/netease.ico",
+    icon: "/icons/neteasenews.png",
     region: "domestic",
     home: "https://news.163.com/",
     color: "#e60000",
@@ -124,7 +123,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "bingcn",
     name: "国内 Bing",
-    icon: "/favicons/bingcn.ico",
+    icon: "/icons/bing-cn.png",
     region: "domestic",
     home: "https://cn.bing.com/",
     color: "#00809d",
@@ -132,7 +131,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "google",
     name: "Google 趋势",
-    icon: "/favicons/google.ico",
+    icon: "/icons/google-trends.png",
     region: "overseas",
     home: "https://trends.google.com/trending?geo=US",
     color: "#4285f4",
@@ -140,7 +139,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "bingintl",
     name: "国际 Bing",
-    icon: "/favicons/bingintl.ico",
+    icon: "/icons/bing-intl.png",
     region: "overseas",
     home: "https://www.bing.com/",
     color: "#00809d",
@@ -148,7 +147,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "reddit",
     name: "Reddit 热帖",
-    icon: "/favicons/reddit.png",
+    icon: "/icons/reddit.png",
     region: "overseas",
     home: "https://www.reddit.com/r/all/hot/",
     color: "#ff4500",
@@ -157,7 +156,7 @@ export const PLATFORMS: PlatformDef[] = [
     key: "hackernews",
     name: "Hacker News",
     // 用本地矢量 SVG（.ico 在部分部署环境存在兼容问题）
-    icon: "/icons/hackernews.svg",
+    icon: "/icons/hackernews.png",
     region: "overseas",
     home: "https://news.ycombinator.com/",
     color: "#f0652f",
@@ -165,9 +164,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "twitter",
     name: "X / 推特热搜",
-    icon: "/icons/x-logo.svg",
-    // X 品牌官方就是白 X + 黑色圆角方块，用矢量版保持锐利
-    chipBg: "#000000",
+    icon: "/icons/x.png",
     region: "overseas",
     home: "https://x.com/explore/tabs/trending",
     color: "#1d9bf0",
@@ -175,7 +172,7 @@ export const PLATFORMS: PlatformDef[] = [
   {
     key: "youtube",
     name: "YouTube 热门",
-    icon: "/favicons/youtube.png",
+    icon: "/icons/youtube.png",
     region: "overseas",
     home: "https://www.youtube.com/feed/trending",
     color: "#ff0000",

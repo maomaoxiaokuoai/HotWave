@@ -22,8 +22,7 @@
 │   ├── drizzle.config.json      # Drizzle 数据库配置
 │   └── env.example              # 环境变量示例
 ├── public/                      # 静态资源（平台图标全部本地化）
-│   ├── favicons/                # 各平台官网 favicon
-│   ├── icons/                   # SVG 兜底图标 + 站点图标
+│   ├── icons/                   # 16 个平台本地 PNG 图标
 │   └── icon.svg                 # 站点 favicon
 └── src/
     ├── app/                     # Next.js 页面与 API 路由
@@ -109,4 +108,4 @@ npm run cf:deploy                    # 一键部署到 Workers
 
 - **部署后页面打不开/一直转圈**：页面在接口失败时会自动显示演示数据；若完全空白，检查 CF 构建日志中 Node 版本是否 ≥ 20.9（仓库内 `.node-version` 已固定为 22），以及构建命令是否为 `npx @opennextjs/cloudflare build`
 - **点击条目打开的是演示数据站**：个别平台接口在 Cloudflare 边缘节点上被限制（如 Reddit），属于正常降级；国内平台与 Google/HN/X/YouTube 均可实时
-- **图标显示异常**：所有平台图标为本地文件（`public/favicons`、`public/icons`），与网络无关
+- **图标显示异常**：所有平台图标为本地 PNG 文件（`public/icons`），与网络无关

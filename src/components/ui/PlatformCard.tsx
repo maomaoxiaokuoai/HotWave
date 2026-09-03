@@ -46,12 +46,12 @@ export default function PlatformCard({
             height={22}
             className="h-[22px] w-[22px] object-contain"
             loading="lazy"
-            // 本地图标万一加载失败，回退到本地品牌 SVG，保证断网也不缺图标
+            // 图标均为本地 PNG；文件异常时回退到本地站点图标。
             onError={(e) => {
               const img = e.currentTarget;
               if (img.dataset.fbk !== "1") {
                 img.dataset.fbk = "1";
-                img.src = `/icons/${data.key}.svg`;
+                img.src = "/icon.svg";
               }
             }}
           />
