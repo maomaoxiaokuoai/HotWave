@@ -13,7 +13,6 @@ export const PLATFORM_KEYS = [
   "bingcn",
   "google",
   "bingintl",
-  "reddit",
   "hackernews",
   "twitter",
   "youtube",
@@ -143,14 +142,6 @@ export const PLATFORMS: PlatformDef[] = [
     region: "overseas",
     home: "https://www.bing.com/",
     color: "#00809d",
-  },
-  {
-    key: "reddit",
-    name: "Reddit 热帖",
-    icon: "/icons/reddit.png",
-    region: "overseas",
-    home: "https://www.reddit.com/r/all/hot/",
-    color: "#ff4500",
   },
   {
     key: "hackernews",

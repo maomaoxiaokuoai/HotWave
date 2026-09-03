@@ -30,7 +30,7 @@ export default function PlatformCard({
         style={{ borderColor: "var(--border)" }}
       >
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
+          className="flex h-10 w-10 shrink-0 overflow-hidden rounded-xl border"
           style={{
             background:
               data.chipBg ??
@@ -42,9 +42,9 @@ export default function PlatformCard({
           <img
             src={data.icon}
             alt={`${data.name} 图标`}
-            width={22}
-            height={22}
-            className="h-[22px] w-[22px] object-contain"
+            width={40}
+            height={40}
+            className="h-full w-full object-cover"
             loading="lazy"
             // 图标均为本地 PNG；文件异常时回退到本地站点图标。
             onError={(e) => {

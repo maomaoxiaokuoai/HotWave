@@ -4,15 +4,6 @@ const TIMEOUT = 4500;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-/** 在不同托管平台上并行尝试等价端点，避免一个出口 IP 被限流就拖慢整页。 */
-async function fetchFirstJson(
-  urls: string[],
-  headers: Record<string, string> = {},
-  init: RequestInit = {}
-) {
-  return Promise.any(urls.map((url) => fetchJson(url, headers, init)));
-}
-
 async function fetchWithTimeout(
   url: string,
   init: RequestInit = {},
@@ -461,71 +452,6 @@ async function fetchGoogleTrends(): Promise<HotItem[]> {
   return limitItems(items);
 }
 
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/g, " ");
-}
-
-async function fetchReddit(): Promise<HotItem[]> {
-  // www.reddit.com 会封锁部分数据中心出口；两个官方 API/旧站域名仍提供同一匿名公开数据。
-  const headers = {
-    accept: "application/json, text/plain, */*",
-    "accept-language": "en-US,en;q=0.9",
-    referer: "https://www.reddit.com/",
-  };
-  const jsonItems = fetchFirstJson(
-    [
-      "https://api.reddit.com/r/all/hot?limit=25&raw_json=1",
-      "https://old.reddit.com/r/all/hot.json?limit=25&raw_json=1",
-      "https://www.reddit.com/r/all/hot.json?limit=25&raw_json=1",
-    ],
-    headers
-  ).then((json: AnyObj) => {
-    const children: AnyObj[] = json?.data?.children ?? [];
-    const direct: HotItem[] = children
-      .filter((c) => !c?.data?.stickied)
-      .map((c) => {
-        const d = c.data;
-        return {
-          title: String(d?.title ?? ""),
-          hot: `${fmtHot(d?.score)} 分`,
-          url:
-            (typeof d?.url === "string" && d.url.startsWith("http")
-              ? d.url
-              : `https://www.reddit.com${d?.permalink ?? ""}`) ||
-            "https://www.reddit.com/r/all/hot/",
-        };
-      });
-    if (!direct.length) throw new Error("reddit JSON empty");
-    return limitItems(direct);
-  });
-
-  // 直连均不可达时，使用缓存转发读取 Reddit 官方 RSS。与 JSON 请求并行，避免额外等待。
-  const rssUrl =
-    "https://api.allorigins.win/raw?url=" +
-    encodeURIComponent("https://www.reddit.com/r/all/hot/.rss?limit=25");
-  const rssItems = fetchText(rssUrl, headers, 8000).then((xml) => {
-    const items: HotItem[] = xml.split("<entry>").slice(1).map((entry) => {
-    const title = entry.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1] ?? "";
-    const link = entry.match(/<link[^>]+href="([^"]+)"/)?.[1] ?? "";
-    return {
-      title: decodeEntities(title.trim()),
-      hot: "r/all",
-      url: decodeEntities(link) || "https://www.reddit.com/r/all/hot/",
-    };
-  });
-    if (!items.length) throw new Error("reddit RSS empty");
-    return limitItems(items);
-  });
-
-  return Promise.any([jsonItems, rssItems]);
-}
-
 async function fetchHackerNews(): Promise<HotItem[]> {
   const json: AnyObj = await fetchJson(
     "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=15"
@@ -668,7 +594,7 @@ export interface FetchResult {
 
 type Fetcher = () => Promise<HotItem[]>;
 
-/** 全部 16 个平台实时抓取（失败时如实标记 failed，不伪造数据） */
+/** 全部 15 个平台实时抓取（失败时如实标记 failed，不伪造数据） */
 const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
   baidu: fetchBaidu,
   weibo: fetchWeibo,
@@ -682,7 +608,6 @@ const FETCHERS: Partial<Record<PlatformKey, Fetcher>> = {
   bingcn: fetchBingCN,
   google: fetchGoogleTrends,
   bingintl: fetchBingIntl,
-  reddit: fetchReddit,
   hackernews: fetchHackerNews,
   twitter: fetchTwitter,
   youtube: fetchYouTube,

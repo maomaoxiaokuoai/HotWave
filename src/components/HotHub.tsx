@@ -450,7 +450,7 @@ export default function HotHub() {
         >
           <p>
             热浪聚合 · 数据来自 百度 / 微博 / 抖音 / 今日头条 / B站 / 知乎 / 快手 /
-            腾讯新闻 / 网易新闻 / 国内Bing / Google Trends / 国际Bing / Reddit /
+            腾讯新闻 / 网易新闻 / 国内Bing / Google Trends / 国际Bing /
             Hacker News / X / YouTube 等公开接口
           </p>
           <p className="mt-1">
