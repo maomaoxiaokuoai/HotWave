@@ -200,6 +200,10 @@ export default function HotHub() {
     () => data?.platforms.filter((p) => p.status === "failed").length ?? 0,
     [data]
   );
+  const staleCount = useMemo(
+    () => data?.platforms.filter((p) => p.status === "stale").length ?? 0,
+    [data]
+  );
   const totalCount = data?.platforms.length ?? 0;
   const showIntensity = FX_WITH_INTENSITY.includes(fx);
 
@@ -392,6 +396,11 @@ export default function HotHub() {
             {failedCount > 0 && (
               <span className="ml-1" style={{ color: "#ef4444" }}>
                 · {failedCount} 个抓取失败
+              </span>
+            )}
+            {staleCount > 0 && (
+              <span className="ml-1" style={{ color: "var(--muted)" }}>
+                · {staleCount} 个缓存结果
               </span>
             )}
           </span>

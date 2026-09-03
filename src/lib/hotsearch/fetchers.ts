@@ -4,14 +4,24 @@ const TIMEOUT = 4500;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
+/** 在不同托管平台上并行尝试等价端点，避免一个出口 IP 被限流就拖慢整页。 */
+async function fetchFirstJson(
+  urls: string[],
+  headers: Record<string, string> = {},
+  init: RequestInit = {}
+) {
+  return Promise.any(urls.map((url) => fetchJson(url, headers, init)));
+}
+
 async function fetchWithTimeout(
   url: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  timeout = TIMEOUT
 ): Promise<Response> {
   // 不使用 AbortSignal.timeout：Cloudflare Workers(workerd)运行时不支持该 API。
   // 改用 AbortController + setTimeout，Node / workerd 全兼容。
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const res = await fetch(url, {
       ...init,
@@ -37,10 +47,14 @@ async function fetchJson(
   return res.json();
 }
 
-async function fetchText(url: string, headers: Record<string, string> = {}) {
+async function fetchText(
+  url: string,
+  headers: Record<string, string> = {},
+  timeout = TIMEOUT
+) {
   const res = await fetchWithTimeout(url, {
     headers: { "user-agent": UA, ...headers },
-  });
+  }, timeout);
   return res.text();
 }
 
@@ -150,14 +164,33 @@ async function fetchWeibo(): Promise<HotItem[]> {
 }
 
 async function fetchBilibili(): Promise<HotItem[]> {
+  // 热搜接口会按出口 IP 限流；热门视频接口是 B 站同一公开 API 的独立路径，可作真实数据兜底。
+  try {
+    const json: AnyObj = await fetchJson(
+      "https://api.bilibili.com/x/web-interface/search/square?limit=30&web_location=333.1007",
+      { referer: "https://www.bilibili.com/" }
+    );
+    const list: AnyObj[] = json?.data?.trending?.list ?? [];
+    const items: HotItem[] = list.map((w) => ({
+      title: String(w.keyword ?? ""),
+      hot: String(w.show_name ?? ""),
+      url: `https://search.bilibili.com/all?keyword=${prettyEnc(String(w.keyword ?? "").trim())}`,
+    }));
+    if (items.length) return limitItems(items);
+  } catch {
+    /* 使用官方热门视频接口 */
+  }
+
   const json: AnyObj = await fetchJson(
-    "https://api.bilibili.com/x/web-interface/search/square?limit=30"
+    "https://api.bilibili.com/x/web-interface/popular?ps=30&pn=1",
+    { referer: "https://www.bilibili.com/" }
   );
-  const list: AnyObj[] = json?.data?.trending?.list ?? [];
-  const items: HotItem[] = list.map((w) => ({
-    title: String(w.keyword ?? ""),
-    hot: String(w.show_name ?? ""),
-    url: `https://search.bilibili.com/all?keyword=${prettyEnc(String(w.keyword ?? "").trim())}`,
+  const items: HotItem[] = (json?.data?.list ?? []).map((video: AnyObj) => ({
+    title: String(video?.title ?? ""),
+    hot: video?.stat?.view ? `${fmtHot(video.stat.view)} 播放` : "",
+    url: video?.bvid
+      ? `https://www.bilibili.com/video/${video.bvid}`
+      : `https://search.bilibili.com/all?keyword=${prettyEnc(String(video?.title ?? "").trim())}`,
   }));
   if (!items.length) throw new Error("bilibili empty");
   return limitItems(items);
@@ -269,13 +302,15 @@ const KUAISHOU_QUERY = `query hotRankQuery($page: String) {
 
 async function fetchKuaishou(): Promise<HotItem[]> {
   // 方案一：快手官方 GraphQL 端点（与网页端完全相同的热榜数据源）
-  for (const endpoint of ["https://www.kuaishou.com/graphql", "https://m.gifshow.com/graphql"]) {
+  for (const endpoint of ["https://www.kuaishou.com/graphql"]) {
     try {
       const res = await fetchWithTimeout(endpoint, {
         method: "POST",
         headers: {
           "content-type": "application/json",
           "user-agent": UA,
+          accept: "*/*",
+          "accept-language": "zh-CN,zh;q=0.9",
           referer: "https://www.kuaishou.com/",
           origin: "https://www.kuaishou.com",
         },
@@ -437,12 +472,20 @@ function decodeEntities(s: string): string {
 }
 
 async function fetchReddit(): Promise<HotItem[]> {
-  // 方案一：官方 JSON（普通网络环境可用；部分数据中心 IP 会被 403）
-  try {
-    const json: AnyObj = await fetchJson(
-      "https://www.reddit.com/r/all/hot.json?limit=25",
-      { "user-agent": "Mozilla/5.0 (compatible; HotWaveAggregator/1.0)" }
-    );
+  // www.reddit.com 会封锁部分数据中心出口；两个官方 API/旧站域名仍提供同一匿名公开数据。
+  const headers = {
+    accept: "application/json, text/plain, */*",
+    "accept-language": "en-US,en;q=0.9",
+    referer: "https://www.reddit.com/",
+  };
+  const jsonItems = fetchFirstJson(
+    [
+      "https://api.reddit.com/r/all/hot?limit=25&raw_json=1",
+      "https://old.reddit.com/r/all/hot.json?limit=25&raw_json=1",
+      "https://www.reddit.com/r/all/hot.json?limit=25&raw_json=1",
+    ],
+    headers
+  ).then((json: AnyObj) => {
     const children: AnyObj[] = json?.data?.children ?? [];
     const direct: HotItem[] = children
       .filter((c) => !c?.data?.stickied)
@@ -458,26 +501,29 @@ async function fetchReddit(): Promise<HotItem[]> {
             "https://www.reddit.com/r/all/hot/",
         };
       });
-    if (direct.length) return limitItems(direct);
-  } catch {
-    /* 走备用方案 */
-  }
-  // 方案二：rss2json 代理 Reddit RSS（官方 JSON 被墙时仍可拿到实时标题）
-  const json: AnyObj = await fetchJson(
-    "https://api.rss2json.com/v1/api.json?rss_url=" +
-      encodeURIComponent("https://www.reddit.com/r/all/hot/.rss")
-  );
-  const items: HotItem[] = (json?.items ?? []).map((it: AnyObj) => {
-    const link = String(it?.link ?? "");
-    const sub = link.match(/reddit\.com\/r\/([^/]+)\//)?.[1];
+    if (!direct.length) throw new Error("reddit JSON empty");
+    return limitItems(direct);
+  });
+
+  // 直连均不可达时，使用缓存转发读取 Reddit 官方 RSS。与 JSON 请求并行，避免额外等待。
+  const rssUrl =
+    "https://api.allorigins.win/raw?url=" +
+    encodeURIComponent("https://www.reddit.com/r/all/hot/.rss?limit=25");
+  const rssItems = fetchText(rssUrl, headers, 8000).then((xml) => {
+    const items: HotItem[] = xml.split("<entry>").slice(1).map((entry) => {
+    const title = entry.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1] ?? "";
+    const link = entry.match(/<link[^>]+href="([^"]+)"/)?.[1] ?? "";
     return {
-      title: decodeEntities(String(it?.title ?? "")),
-      hot: sub ? `r/${sub}` : "",
-      url: link || "https://www.reddit.com/r/all/hot/",
+      title: decodeEntities(title.trim()),
+      hot: "r/all",
+      url: decodeEntities(link) || "https://www.reddit.com/r/all/hot/",
     };
   });
-  if (!items.length) throw new Error("reddit empty");
-  return limitItems(items);
+    if (!items.length) throw new Error("reddit RSS empty");
+    return limitItems(items);
+  });
+
+  return Promise.any([jsonItems, rssItems]);
 }
 
 async function fetchHackerNews(): Promise<HotItem[]> {

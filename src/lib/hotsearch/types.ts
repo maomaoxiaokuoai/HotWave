@@ -41,8 +41,8 @@ export interface PlatformDef {
 
 export interface PlatformData extends PlatformDef {
   items: HotItem[];
-  /** 抓取状态：live=实时成功，failed=抓取失败（如实展示，不再用演示数据误导） */
-  status: "live" | "failed";
+  /** live=实时成功，stale=本次失败时保留的最近一次真实结果，failed=没有可展示的数据 */
+  status: "live" | "stale" | "failed";
   fetchedAt: number;
 }
 

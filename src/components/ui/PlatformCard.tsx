@@ -17,6 +17,7 @@ export default function PlatformCard({
   index: number;
 }) {
   const live = data.status === "live";
+  const stale = data.status === "stale";
 
   return (
     <section
@@ -63,7 +64,7 @@ export default function PlatformCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px]" style={{ color: "var(--muted)" }}>
-            {live ? "实时抓取" : "抓取失败"} ·{" "}
+            {live ? "实时抓取" : stale ? "上次成功数据" : "抓取失败"} ·{" "}
             {new Date(data.fetchedAt).toLocaleTimeString("zh-CN", {
               hour12: false,
             })}
@@ -78,7 +79,7 @@ export default function PlatformCard({
             }}
           >
             <i className={live ? "live-dot" : "fail-dot"} />
-            {live ? "实时" : "失败"}
+            {live ? "实时" : stale ? "缓存" : "失败"}
           </span>
           <a
             href={data.home}
@@ -93,7 +94,7 @@ export default function PlatformCard({
       </header>
 
       {/* 榜单 / 失败提示 */}
-      {live ? (
+      {live || stale ? (
         <ol className="p-2">
           {data.items.map((item, i) => (
             <li key={`${data.key}-${i}`}>

@@ -4,9 +4,10 @@ import { eq } from "drizzle-orm";
 import { PLATFORMS, type HotItem, type PlatformData } from "./types";
 import { fetchPlatform } from "./fetchers";
 
-const CACHE_KEY = "hot:v9"; // v9: 快手官方 GraphQL 实时源 + 页脚文案更新
+const CACHE_KEY = "hot:v10"; // v10: 多端点抓取 + 失败保留最近成功数据
 const MEMORY_TTL = 60_000; // 内存缓存 60 秒
 const DB_TTL = 120_000; // 数据库缓存 120 秒
+const STALE_TTL = 30 * 60_000; // 上游短暂故障时最多展示 30 分钟内的真实结果
 
 interface AggregatePayload {
   updatedAt: number;
@@ -21,9 +22,11 @@ export interface AggregateResult extends AggregatePayload {
 
 export async function aggregateHotSearches(force = false): Promise<AggregateResult> {
   const now = Date.now();
+  let previousPayload: AggregatePayload | undefined;
 
   // 1. 内存缓存
   const mem = memoryCache.get(CACHE_KEY);
+  if (mem) previousPayload = mem.payload;
   if (!force && mem && now - mem.at < MEMORY_TTL) {
     return { ...mem.payload, cache: "memory" };
   }
@@ -38,17 +41,20 @@ export async function aggregateHotSearches(force = false): Promise<AggregateResu
         .where(eq(hotCache.key, CACHE_KEY))
         .limit(1);
       const row = rows[0];
-      if (row && !force && now - row.updatedAt.getTime() < DB_TTL) {
+      if (row) {
         const payload = JSON.parse(row.payload) as AggregatePayload;
-        memoryCache.set(CACHE_KEY, { at: now, payload });
-        return { ...payload, cache: "db" };
+        previousPayload ??= payload;
+        if (!force && now - row.updatedAt.getTime() < DB_TTL) {
+          memoryCache.set(CACHE_KEY, { at: now, payload });
+          return { ...payload, cache: "db" };
+        }
       }
     } catch {
       /* 数据库不可用时继续走实时抓取 */
     }
   }
 
-  // 3. 实时抓取（各平台并行，失败平台如实标记 failed，不伪造数据）
+  // 3. 实时抓取。短暂失败时保留最近一次成功的真实数据，并明确标注为缓存结果。
   const results = await Promise.allSettled(
     PLATFORMS.map(async (p) => {
       const res = await fetchPlatform(p.key).catch(() => ({
@@ -61,7 +67,15 @@ export async function aggregateHotSearches(force = false): Promise<AggregateResu
 
   const platforms: PlatformData[] = results.map((r, i) => {
     const def = PLATFORMS[i];
-    if (r.status === "fulfilled") return r.value;
+    if (r.status === "fulfilled" && r.value.status === "live") return r.value;
+    const previous = previousPayload?.platforms.find((p) => p.key === def.key);
+    if (
+      previous?.items.length &&
+      previous.status !== "failed" &&
+      now - previous.fetchedAt < STALE_TTL
+    ) {
+      return { ...def, items: previous.items, status: "stale", fetchedAt: previous.fetchedAt };
+    }
     return { ...def, items: [], status: "failed", fetchedAt: now };
   });
 
